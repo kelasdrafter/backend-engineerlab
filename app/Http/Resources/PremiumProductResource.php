@@ -19,6 +19,7 @@ class PremiumProductResource extends JsonResource
             'slug' => $this->slug,
             'name' => $this->name,
             'description' => $this->description,
+            'short_description' => $this->short_description,
             'price' => (float) $this->price,
             'discount_price' => (float) $this->discount_price,
             'final_price' => (float) $this->final_price,

@@ -18,6 +18,7 @@ class PremiumProduct extends Model
         'slug',
         'name',
         'description',
+        'short_description',
         'price',
         'discount_price',
         'thumbnail_url',

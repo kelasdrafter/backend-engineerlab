@@ -85,6 +85,7 @@ class PremiumProductController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
+            'short_description' => 'nullable|string|max:200', 
             'price' => 'required|numeric|min:0',
             'discount_price' => 'required|numeric|min:0',
             'thumbnail_url' => 'required|string',
@@ -129,6 +130,7 @@ class PremiumProductController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'description' => 'sometimes|required|string',
+            'short_description' => 'sometimes|nullable|string|max:200',
             'price' => 'sometimes|required|numeric|min:0',
             'discount_price' => 'sometimes|required|numeric|min:0',
             'thumbnail_url' => 'sometimes|required|string',
