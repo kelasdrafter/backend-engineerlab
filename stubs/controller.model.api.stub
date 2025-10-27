@@ -1,0 +1,82 @@
+<?php
+
+namespace {{ namespace }};
+
+use {{ namespacedModel }};
+use {{ rootNamespace }}Http\Controllers\Controller;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\QueryBuilder;
+use Illuminate\Http\JsonResponse;
+use Exception;
+use {{ namespacedRequests }}
+
+class {{ class }} extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     */
+    public function index() : JsonResponse
+    {
+        try {
+            $allowedColumns = (new {{ model }})->getFillable();
+            $data = QueryBuilder::for({{ model }}::class)
+                ->allowedFilters([...$allowedColumns, AllowedFilter::exact('is_active')])
+                ->allowedSorts([...$allowedColumns, 'created_at', 'updated_at'])
+                ->paginate();
+
+            return $this->responseSuccess('Get Data Succcessfully', $data, 200);
+        } catch (Exception $exeception) {
+            return $this->responseError($exeception, [], 500);
+        }
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store({{ storeRequest }} $request)
+    {
+        try {
+            $data = $this->generateData($request);
+            $data = {{ model }}::create($data);
+
+            return $this->responseSuccess('Create Data Succcessfully', $data, 200);
+        } catch (Exception $exeception) {
+            return $this->responseError($exeception, [], 500);
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show({{ model }} ${{ modelVariable }})
+    {
+        return $this->responseSuccess('Get Data Succcessfully', ${{ modelVariable }}, 200);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update({{ updateRequest }} $request, {{ model }} ${{ modelVariable }})
+    {
+        ${{ modelVariable }}->fill($this->generateData($request));
+        ${{ modelVariable }}->save();
+
+        return $this->responseSuccess('Update Data Succcessfully', ${{ modelVariable }}, 200);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy({{ model }} ${{ modelVariable }})
+    {
+        ${{ modelVariable }}->delete();
+        return $this->responseSuccess('Delete Data Succcessfully', ${{ modelVariable }}, 200);
+    }
+
+    public function generateData($request)
+    {
+        return [
+            'name' => $request->name,
+        ];
+    }
+}
