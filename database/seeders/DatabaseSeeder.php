@@ -50,6 +50,9 @@ class DatabaseSeeder extends Seeder
             PremiumProductCompatibilitySeeder::class,
             PremiumProductQnaSeeder::class,
             PremiumProductReviewSeeder::class,
+            
+            // ✅ NEW: Live Learning Seeder
+            LiveLearningSeeder::class,
         ]);
         
     }

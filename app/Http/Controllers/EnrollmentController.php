@@ -32,9 +32,21 @@ class EnrollmentController extends Controller
                     AllowedFilter::exact('user_id'),
                     AllowedFilter::exact('course_id'),
                     AllowedFilter::exact('batch_id'),
+                    // search on related user.email (already exists)
                     AllowedFilter::callback('email', function ($query, $value) {
                         $query->whereHas('user', function ($query) use ($value) {
                             $query->where('email', 'like', "%{$value}%");
+                        });
+                    }),
+                    // NEW: allow ?filter[phone]=... to search user.phone (flexible matching)
+                    AllowedFilter::callback('phone', function ($query, $value) {
+                        $needle = preg_replace('/\D+/', '', (string) $value); // digits-only input
+                        $original = (string) $value;
+
+                        $query->whereHas('user', function ($q) use ($original, $needle) {
+                            // check both raw input and digits-only input for flexible matching
+                            $q->where('phone', 'like', "%{$original}%")
+                              ->orWhere('phone', 'like', "%{$needle}%");
                         });
                     }),
                 ])
@@ -42,7 +54,6 @@ class EnrollmentController extends Controller
                 ->defaultSort('-created_at')
                 ->paginate($perPage);
 
-            // return $this->responseSuccess('Get Data Succcessfully', $data, 200);
             return $this->responseSuccess(
                 'Get Data Successfully',
                 [

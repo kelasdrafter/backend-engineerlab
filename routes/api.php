@@ -51,6 +51,11 @@ use App\Http\Controllers\PremiumProductQnaController;
 use App\Http\Controllers\PremiumProductReviewController;
 use App\Http\Controllers\PremiumTransactionController;
 
+// ✅ NEW: Import Live Learning Controllers
+use App\Http\Controllers\LiveLearningController;
+use App\Http\Controllers\LiveLearningRegistrationController;
+use App\Http\Controllers\AdminLiveLearningController;
+
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -117,6 +122,13 @@ Route::prefix('premium-products')->group(function () {
     Route::get('/{productId}/compatibilities', [PremiumProductCompatibilityController::class, 'index']); // Get compatibilities
     Route::get('/{productId}/qnas', [PremiumProductQnaController::class, 'index']); // Get Q&As
     Route::get('/{productId}/reviews', [PremiumProductReviewController::class, 'index']); // Get reviews
+});
+
+// ✅ NEW: Live Learning Public Routes (No Auth Required)
+Route::prefix('live-learnings')->group(function () {
+    Route::get('/', [LiveLearningController::class, 'index']); // List live learnings (published only)
+    Route::get('/{slug}', [LiveLearningController::class, 'show']); // Detail live learning by slug
+    Route::post('/{id}/register', [LiveLearningRegistrationController::class, 'store']); // Register to live learning
 });
 
 Route::middleware('auth:api')->group(function () {
@@ -247,6 +259,26 @@ Route::middleware(['auth:api', 'verified'])->group(function () {
         Route::post('/{productId}/reviews', [PremiumProductReviewController::class, 'store']); // Add review
         Route::put('/reviews/{id}', [PremiumProductReviewController::class, 'update']); // Update review
         Route::delete('/reviews/{id}', [PremiumProductReviewController::class, 'destroy']); // Delete review
+    });
+
+Route::prefix('admin/live-learnings')->group(function () {
+    Route::get('/', [AdminLiveLearningController::class, 'index']); // List all live learnings
+    Route::post('/', [AdminLiveLearningController::class, 'store']); // Create live learning
+    Route::get('/{id}', [AdminLiveLearningController::class, 'show']); // Get live learning by ID
+    Route::put('/{id}', [AdminLiveLearningController::class, 'update']); // Update live learning
+    Route::delete('/{id}', [AdminLiveLearningController::class, 'destroy']); // Delete live learning (soft delete)
+    
+    // Registrations Management
+    Route::get('/{id}/registrations', [AdminLiveLearningController::class, 'registrations']); // Get registrations for specific live learning
+    
+    // ✅ TAMBAHAN BARU - Export Registrations
+    Route::get('/{id}/registrations/export', [AdminLiveLearningController::class, 'exportRegistrations']); // Export registrations to Excel
+});
+
+    // ✅ NEW: Live Learning Registrations Admin Routes
+    Route::prefix('admin/live-learning-registrations')->group(function () {
+        Route::get('/', [AdminLiveLearningController::class, 'allRegistrations']); // Get all registrations
+        Route::delete('/{id}', [AdminLiveLearningController::class, 'destroyRegistration']); // Delete registration
     });
 
     // Learn Corner Admin Routes (Perlu login & verified)

@@ -35,7 +35,13 @@ class TransactionController extends Controller
                         $query->whereHas('user', function ($query) use ($value) {
                             $query->where('email', $value);
                         });
-                    })
+                    }),
+                    // ADDED: allow ?filter[name]=... to search by related user's name
+                    AllowedFilter::callback('name', function ($query, $value) {
+                        $query->whereHas('user', function ($q) use ($value) {
+                            $q->where('name', 'like', "%{$value}%");
+                        });
+                    }),
                 ])
                 ->allowedSorts([...$allowedColumns, 'created_at', 'updated_at'])
                 ->defaultSort('-created_at')
