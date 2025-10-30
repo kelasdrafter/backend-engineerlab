@@ -104,62 +104,45 @@ class UserController extends Controller
         return $this->responseSuccess('Delete Data Succcessfully', new UserResource($user), 200);
     }
 
-public function redirectToGoogle(Request $request)
-{
-    // Simpan redirect URL dan origin ke session
-    $redirectUrl = $request->get('redirect', '/course');
-    $origin = $request->get('origin', env('APP_FRONTEND_URL'));
-    
-    session([
-        'google_redirect' => $redirectUrl,
-        'google_origin' => $origin
-    ]);
-    
-    return Socialite::driver('google')->redirect();
-}
-
-public function handleGoogleCallback(Request $request)
-{
-    try {
-        $user = Socialite::driver('google')->user();
-        $finduser = User::where('email', $user->email)->first();
-
-        // Ambil redirect URL dan origin dari session
-        $redirectUrl = session('google_redirect', '/course');
-        $origin = session('google_origin', env('APP_FRONTEND_URL'));
-        
-        // Hapus dari session setelah digunakan
-        session()->forget(['google_redirect', 'google_origin']);
-
-        if($finduser){
-            if (is_null($finduser->email_verified_at)) {
-                $finduser->google_id = $user->id;
-                $finduser->email_verified_at = now();
-                $finduser->save();
-            }
-
-            $token = JWTAuth::fromUser($finduser);
-            // Gunakan origin yang dikirim dari frontend
-            return redirect()->away($origin . "/login?token=" . $token . "&callbackUrl=" . urlencode($redirectUrl));
-        }else{
-            $newUser = User::create([
-                'name' => $user->name,
-                'email' => $user->email,
-                'google_id'=> $user->id,
-                'password' => Hash::make(Str::random(12)),
-                'email_verified_at' => now(),
-                'role' => 'user',
-                'is_active' => true,
-            ]);
-
-            $token = JWTAuth::fromUser($newUser);
-            // Gunakan origin yang dikirim dari frontend
-            return redirect()->away($origin . "/login?token=" . $token . "&callbackUrl=" . urlencode($redirectUrl));
-        }
-    } catch (Exception $e) {
-        return redirect('login/google');
+    public function redirectToGoogle()
+    {
+        return Socialite::driver('google')->redirect();
     }
-}
+
+    public function handleGoogleCallback()
+    {
+        try {
+            $user = Socialite::driver('google')->user();
+            $finduser = User::where('email', $user->email)->first();
+
+            if($finduser){
+                // Cek apakah kolom 'email_verified_at' masih null
+                if (is_null($finduser->email_verified_at)) {
+                    $finduser->google_id = $user->id;
+                    $finduser->email_verified_at = now();
+                    $finduser->save();
+                }
+
+                $token = JWTAuth::fromUser($finduser);
+                return redirect()->away(env('APP_FRONTEND_URL') . "/login?token=" . $token);
+            }else{
+                $newUser = User::create([
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'google_id'=> $user->id,
+                    'password' => Hash::make(Str::random(12)),
+                    'email_verified_at' => now(),
+                    'role' => 'user',
+                    'is_active' => true,
+                ]);
+
+                $token = JWTAuth::fromUser($newUser);
+                return redirect()->away(env('APP_FRONTEND_URL') . "/login?token=" . $token);
+            }
+        } catch (Exception $e) {
+            return redirect('login/google');
+        }
+    }
 
     public function exportUsers()
     {
