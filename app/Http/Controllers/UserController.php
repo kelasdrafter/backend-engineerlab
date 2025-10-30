@@ -17,6 +17,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Spatie\QueryBuilder\AllowedFilter;
 use Spatie\QueryBuilder\QueryBuilder;
 use Illuminate\Http\Request;
@@ -104,45 +105,60 @@ class UserController extends Controller
         return $this->responseSuccess('Delete Data Succcessfully', new UserResource($user), 200);
     }
 
-    public function redirectToGoogle()
-    {
-        return Socialite::driver('google')->redirect();
-    }
+public function redirectToGoogle(Request $request)
+{
+    $redirectUrl = $request->query('redirect_url', '/courses');
+    
+    // Simpan ke Laravel session
+    session(['oauth_redirect_url' => $redirectUrl]);
+    
+    return Socialite::driver('google')->redirect();
+}
 
-    public function handleGoogleCallback()
-    {
-        try {
-            $user = Socialite::driver('google')->user();
-            $finduser = User::where('email', $user->email)->first();
+public function handleGoogleCallback(Request $request)
+{
+    try {
+        // Ambil redirect URL dari session
+        $redirectUrl = session('oauth_redirect_url', '/courses');
+        session()->forget('oauth_redirect_url');
+        
+        $user = Socialite::driver('google')->user();
+        $finduser = User::where('email', $user->email)->first();
 
-            if($finduser){
-                // Cek apakah kolom 'email_verified_at' masih null
-                if (is_null($finduser->email_verified_at)) {
-                    $finduser->google_id = $user->id;
-                    $finduser->email_verified_at = now();
-                    $finduser->save();
-                }
-
-                $token = JWTAuth::fromUser($finduser);
-                return redirect()->away(env('APP_FRONTEND_URL') . "/login?token=" . $token);
-            }else{
-                $newUser = User::create([
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'google_id'=> $user->id,
-                    'password' => Hash::make(Str::random(12)),
-                    'email_verified_at' => now(),
-                    'role' => 'user',
-                    'is_active' => true,
-                ]);
-
-                $token = JWTAuth::fromUser($newUser);
-                return redirect()->away(env('APP_FRONTEND_URL') . "/login?token=" . $token);
+        if($finduser){
+            if (is_null($finduser->email_verified_at)) {
+                $finduser->google_id = $user->id;
+                $finduser->email_verified_at = now();
+                $finduser->save();
             }
-        } catch (Exception $e) {
-            return redirect('login/google');
+
+            $token = JWTAuth::fromUser($finduser);
+            
+            return redirect()->away(
+                env('APP_FRONTEND_URL') . "/auth/callback?access_token=" . $token . "&redirect=" . urlencode($redirectUrl)
+            );
+        }else{
+            $newUser = User::create([
+                'name' => $user->name,
+                'email' => $user->email,
+                'google_id'=> $user->id,
+                'password' => Hash::make(Str::random(12)),
+                'email_verified_at' => now(),
+                'role' => 'user',
+                'is_active' => true,
+            ]);
+
+            $token = JWTAuth::fromUser($newUser);
+            
+            return redirect()->away(
+                env('APP_FRONTEND_URL') . "/auth/callback?access_token=" . $token . "&redirect=" . urlencode($redirectUrl)
+            );
         }
+    } catch (Exception $e) {
+        \Log::error('Google OAuth Error: ' . $e->getMessage());
+        return redirect()->away(env('APP_FRONTEND_URL') . "/auth/callback?error=google_auth_failed");
     }
+}
 
     public function exportUsers()
     {
