@@ -56,6 +56,9 @@ use App\Http\Controllers\LiveLearningController;
 use App\Http\Controllers\LiveLearningRegistrationController;
 use App\Http\Controllers\AdminLiveLearningController;
 
+// ---- ADDED: JwtAuthController import for token-login exchange ----
+use App\Http\Controllers\Auth\JwtAuthController;
+
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -70,6 +73,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 require __DIR__ . '/auth.php';
+
+// ---- ADDED: endpoint for exchanging OAuth JWT token into HttpOnly cookie ----
+Route::post('/auth/token-login', [JwtAuthController::class, 'tokenLogin']);
 
 Route::post('/webhook-midtrans', [PaymentController::class, 'webhookMidtrans']);
 Route::get('/public/portfolio/user/{userId}', [PortfolioController::class, 'getUserPortfolio']);

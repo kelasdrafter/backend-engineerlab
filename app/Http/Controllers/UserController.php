@@ -104,11 +104,17 @@ class UserController extends Controller
         return $this->responseSuccess('Delete Data Succcessfully', new UserResource($user), 200);
     }
 
-    public function redirectToGoogle()
+    // Modified: accept Request so we can capture callbackUrl from frontend and save to session
+    public function redirectToGoogle(Request $request)
     {
+        // capture callbackUrl from frontend (default to /course)
+        $callback = $request->get('callbackUrl', '/course');
+        session(['oauth_callback' => $callback]);
+
         return Socialite::driver('google')->redirect();
     }
 
+    // Modified: read callbackUrl from session and redirect to frontend callback with token
     public function handleGoogleCallback()
     {
         try {
@@ -124,7 +130,13 @@ class UserController extends Controller
                 }
 
                 $token = JWTAuth::fromUser($finduser);
-                return redirect()->away(env('APP_FRONTEND_URL') . "/login?token=" . $token);
+
+                // Read callback saved earlier; default to /course
+                $callback = session('oauth_callback', '/course');
+                $frontendUrl = rtrim(env('APP_FRONTEND_URL'), '/');
+                $redirectTo = str_starts_with($callback, '/') ? $frontendUrl . $callback : $callback;
+
+                return redirect()->away($redirectTo . (str_contains($redirectTo, '?') ? '&' : '?') . 'token=' . urlencode($token));
             }else{
                 $newUser = User::create([
                     'name' => $user->name,
@@ -137,7 +149,13 @@ class UserController extends Controller
                 ]);
 
                 $token = JWTAuth::fromUser($newUser);
-                return redirect()->away(env('APP_FRONTEND_URL') . "/login?token=" . $token);
+
+                // Read callback saved earlier; default to /course
+                $callback = session('oauth_callback', '/course');
+                $frontendUrl = rtrim(env('APP_FRONTEND_URL'), '/');
+                $redirectTo = str_starts_with($callback, '/') ? $frontendUrl . $callback : $callback;
+
+                return redirect()->away($redirectTo . (str_contains($redirectTo, '?') ? '&' : '?') . 'token=' . urlencode($token));
             }
         } catch (Exception $e) {
             return redirect('login/google');
@@ -165,7 +183,8 @@ class UserController extends Controller
             'photo_url' => $request->photo_url,
             'institution' => $request->institution,
             'occupation' => $request->occupation,
-            'password' => $request->password ?? Hash::make($request->password),
+            // Fix: hash password if provided, otherwise null (do not store plain text)
+            'password' => $request->password ? Hash::make($request->password) : null,
             'role' => $request->role,
             'email_verified_at' => $request->email_verified_at,
             'is_active' => $request->is_active,

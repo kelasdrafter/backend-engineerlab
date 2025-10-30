@@ -12,6 +12,8 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Exception;
 
 class JwtAuthController extends Controller
 {
@@ -75,6 +77,44 @@ class JwtAuthController extends Controller
             'user' => new UserResource(Auth::user()),
             'access_token' => $token,
         ]);
+    }
+
+    /**
+     * Exchange a JWT token (from OAuth callback) and set it as HttpOnly cookie.
+     * Frontend should POST { token } to this endpoint with credentials: 'include'
+     */
+    public function tokenLogin(Request $request): JsonResponse
+    {
+        $request->validate([
+            'token' => ['required', 'string'],
+        ]);
+
+        try {
+            $token = $request->input('token');
+
+            // Validate token and get user
+            JWTAuth::setToken($token);
+            $user = JWTAuth::authenticate();
+
+            if (! $user) {
+                return response()->json(['message' => 'Invalid token'], 401);
+            }
+
+            // Set cookie (7 days). secure true in production.
+            $minutes = 60 * 24 * 7;
+            $secure = config('app.env') === 'production';
+
+            // Laravel cookie helper: cookie(name, value, minutes, path, domain, secure, httpOnly, raw, sameSite)
+            // For cross-site cookie in production you may need SameSite=None and secure=true
+            $cookie = cookie('jwt_token', $token, $minutes, '/', null, $secure, true, false, 'None');
+
+            return response()->json([
+                'message' => 'ok',
+                'user' => new UserResource($user),
+            ])->withCookie($cookie);
+        } catch (Exception $e) {
+            return response()->json(['message' => 'Invalid token', 'error' => $e->getMessage()], 401);
+        }
     }
 
     /**

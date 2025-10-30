@@ -15,11 +15,15 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    // Ensure api/* and any login/socialite redirects are covered
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login/*'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    // Production: use only APP_FRONTEND_URL from env (no localhost fallback)
+    'allowed_origins' => [
+        env('APP_FRONTEND_URL'),
+    ],
 
     'allowed_origins_patterns' => [],
 
@@ -29,6 +33,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
-
+    // Must be true so browser accepts Set-Cookie from cross-origin responses
+    'supports_credentials' => true,
 ];
