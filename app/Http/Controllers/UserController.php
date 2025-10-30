@@ -106,9 +106,14 @@ class UserController extends Controller
 
 public function redirectToGoogle(Request $request)
 {
-    // Simpan redirect URL ke session untuk diambil saat callback
+    // Simpan redirect URL dan origin ke session
     $redirectUrl = $request->get('redirect', '/course');
-    session(['google_redirect' => $redirectUrl]);
+    $origin = $request->get('origin', env('APP_FRONTEND_URL'));
+    
+    session([
+        'google_redirect' => $redirectUrl,
+        'google_origin' => $origin
+    ]);
     
     return Socialite::driver('google')->redirect();
 }
@@ -119,10 +124,12 @@ public function handleGoogleCallback(Request $request)
         $user = Socialite::driver('google')->user();
         $finduser = User::where('email', $user->email)->first();
 
-        // Ambil redirect URL dari session (sudah disimpan di redirectToGoogle)
+        // Ambil redirect URL dan origin dari session
         $redirectUrl = session('google_redirect', '/course');
+        $origin = session('google_origin', env('APP_FRONTEND_URL'));
+        
         // Hapus dari session setelah digunakan
-        session()->forget('google_redirect');
+        session()->forget(['google_redirect', 'google_origin']);
 
         if($finduser){
             if (is_null($finduser->email_verified_at)) {
@@ -132,7 +139,8 @@ public function handleGoogleCallback(Request $request)
             }
 
             $token = JWTAuth::fromUser($finduser);
-            return redirect()->away(env('APP_FRONTEND_URL') . "/login?token=" . $token . "&callbackUrl=" . urlencode($redirectUrl));
+            // Gunakan origin yang dikirim dari frontend
+            return redirect()->away($origin . "/login?token=" . $token . "&callbackUrl=" . urlencode($redirectUrl));
         }else{
             $newUser = User::create([
                 'name' => $user->name,
@@ -145,7 +153,8 @@ public function handleGoogleCallback(Request $request)
             ]);
 
             $token = JWTAuth::fromUser($newUser);
-            return redirect()->away(env('APP_FRONTEND_URL') . "/login?token=" . $token . "&callbackUrl=" . urlencode($redirectUrl));
+            // Gunakan origin yang dikirim dari frontend
+            return redirect()->away($origin . "/login?token=" . $token . "&callbackUrl=" . urlencode($redirectUrl));
         }
     } catch (Exception $e) {
         return redirect('login/google');
