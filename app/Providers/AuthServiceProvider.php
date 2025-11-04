@@ -12,11 +12,15 @@ use Illuminate\Support\Facades\URL;
 use App\Policies\InsightPolicy;
 use App\Policies\InsightCommentPolicy;
 use App\Policies\InsightCategoryPolicy;
+use App\Policies\AhspSourcePolicy;
+use App\Policies\MasterAhspPolicy;
 
 // ✅ Import Models
 use App\Models\Insight;
 use App\Models\InsightComment;
 use App\Models\InsightCategory;
+use App\Models\RAB\AhspSource;
+use App\Models\RAB\MasterAhsp;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -26,10 +30,14 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        // ✅ NEW: Insight Lab Policies
+        // ✅ Insight Lab Policies
         Insight::class => InsightPolicy::class,
         InsightComment::class => InsightCommentPolicy::class,
         InsightCategory::class => InsightCategoryPolicy::class,
+        
+        // ✅ RAB Policies
+        AhspSource::class => AhspSourcePolicy::class,
+        MasterAhsp::class => MasterAhspPolicy::class,
     ];
 
     /**

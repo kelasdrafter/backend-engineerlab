@@ -43,7 +43,7 @@ class DatabaseSeeder extends Seeder
             ChapterSeeder::class,
             LessonSeeder::class,
             
-            // ✅ NEW: Premium Products Seeders
+            // ✅ Premium Products Seeders
             PremiumProductSeeder::class,
             PremiumProductGallerySeeder::class,
             PremiumProductVideoSeeder::class,
@@ -51,8 +51,15 @@ class DatabaseSeeder extends Seeder
             PremiumProductQnaSeeder::class,
             PremiumProductReviewSeeder::class,
             
-            // ✅ NEW: Live Learning Seeder
+            // ✅ Live Learning Seeder
             LiveLearningSeeder::class,
+            
+            // ✅ NEW: RAB Automation Seeders
+            // NOTE: Run these in order (foreign key dependencies)
+            AhspSourceSeeder::class,      // 1. AHSP Sources (no dependencies)
+            RegionSeeder::class,           // 2. Regions (no dependencies)
+            ItemSeeder::class,             // 3. Items + Prices (no dependencies)
+            MasterAhspSeeder::class,       // 4. Master AHSP (depends on: sources, items)
         ]);
         
     }

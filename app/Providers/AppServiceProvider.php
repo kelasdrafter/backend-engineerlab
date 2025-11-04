@@ -5,6 +5,10 @@ namespace App\Providers;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use App\Models\RAB\Project;
+use App\Models\RAB\ProjectAhsp;
+use App\Observers\ProjectObserver;
+use App\Observers\ProjectAhspObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,5 +30,9 @@ class AppServiceProvider extends ServiceProvider
     {
         URL::forceScheme('https');
         JsonResource::withoutWrapping(); // Remove this if you want to wrap data within a 'data' key
+        
+        // Register RAB Observers
+        Project::observe(ProjectObserver::class);
+        ProjectAhsp::observe(ProjectAhspObserver::class);
     }
 }

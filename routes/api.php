@@ -33,7 +33,7 @@ use App\Http\Controllers\PrivilegeController;
 use App\Http\Controllers\ScheduleChapterController;
 use App\Http\Controllers\LearnCornerController;
 
-// ✅ NEW: Import Insight Lab Controllers
+// ✅ Insight Lab Controllers
 use App\Http\Controllers\InsightController;
 use App\Http\Controllers\InsightCommentController;
 use App\Http\Controllers\InsightCategoryController;
@@ -42,7 +42,7 @@ use App\Http\Controllers\AdminInsightCategoryController;
 use App\Http\Controllers\AdminInsightController;
 use App\Http\Controllers\AdminInsightCommentController;
 
-// ✅ NEW: Import Premium Products Controllers
+// ✅ Premium Products Controllers
 use App\Http\Controllers\PremiumProductController;
 use App\Http\Controllers\PremiumProductGalleryController;
 use App\Http\Controllers\PremiumProductVideoController;
@@ -51,10 +51,22 @@ use App\Http\Controllers\PremiumProductQnaController;
 use App\Http\Controllers\PremiumProductReviewController;
 use App\Http\Controllers\PremiumTransactionController;
 
-// ✅ NEW: Import Live Learning Controllers
+// ✅ Live Learning Controllers
 use App\Http\Controllers\LiveLearningController;
 use App\Http\Controllers\LiveLearningRegistrationController;
 use App\Http\Controllers\AdminLiveLearningController;
+
+// ✅ NEW: RAB Controllers
+use App\Http\Controllers\RAB\AdminAhspSourceController;
+use App\Http\Controllers\RAB\AdminMasterAhspController;
+use App\Http\Controllers\RAB\AdminProjectTemplateController;
+use App\Http\Controllers\RAB\AdminItemController;
+use App\Http\Controllers\RAB\AdminRegionController;
+use App\Http\Controllers\RAB\ProjectController;
+use App\Http\Controllers\RAB\ProjectAhspController;
+use App\Http\Controllers\RAB\ProjectBoqController;
+use App\Http\Controllers\RAB\ProjectCategoryController;
+use App\Http\Controllers\RAB\CalculationController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -102,7 +114,7 @@ Route::prefix('learn-corner')->group(function () {
     Route::get('/{slug}', [LearnCornerController::class, 'show']); // Detail video by slug
 });
 
-// ✅ NEW: Insight Lab Public Routes (No Auth Required)
+// ✅ Insight Lab Public Routes (No Auth Required)
 Route::prefix('insights')->group(function () {
     Route::get('/', [InsightController::class, 'index']); // List insights
     Route::get('/{slug}', [InsightController::class, 'show']); // Detail insight
@@ -113,7 +125,7 @@ Route::prefix('insights')->group(function () {
 Route::get('/insight-categories', [InsightCategoryController::class, 'index']); // List categories
 Route::get('/leaderboard', [LeaderboardController::class, 'index']); // Top 4 users
 
-// ✅ NEW: Premium Products Public Routes (No Auth Required)
+// ✅ Premium Products Public Routes (No Auth Required)
 Route::prefix('premium-products')->group(function () {
     Route::get('/', [PremiumProductController::class, 'index']); // List products
     Route::get('/{slug}', [PremiumProductController::class, 'show']); // Product detail by slug
@@ -124,7 +136,7 @@ Route::prefix('premium-products')->group(function () {
     Route::get('/{productId}/reviews', [PremiumProductReviewController::class, 'index']); // Get reviews
 });
 
-// ✅ NEW: Live Learning Public Routes (No Auth Required)
+// ✅ Live Learning Public Routes (No Auth Required)
 Route::prefix('live-learnings')->group(function () {
     Route::get('/', [LiveLearningController::class, 'index']); // List live learnings (published only)
     Route::get('/{slug}', [LiveLearningController::class, 'show']); // Detail live learning by slug
@@ -143,7 +155,7 @@ Route::middleware('auth:api')->group(function () {
 
     Route::apiResource('files', FileController::class)->middleware('increaseTimeout');
 
-    // ✅ NEW: Insight Lab Protected Routes (Auth Required)
+    // ✅ Insight Lab Protected Routes (Auth Required)
     Route::prefix('insights')->group(function () {
         Route::post('/', [InsightController::class, 'store']); // Create insight
         Route::put('/{id}', [InsightController::class, 'update']); // Update insight
@@ -211,7 +223,7 @@ Route::middleware(['auth:api', 'verified'])->group(function () {
     Route::get('/validate-print-certificate/{courseId}', [CertificateController::class, 'validatePrintCertificate']);
     Route::post('/certificate/print', [CertificateController::class, 'generateCertificate']);
 
-    // ✅ NEW: Premium Products User Routes (Auth + Verified Required)
+    // ✅ Premium Products User Routes (Auth + Verified Required)
     Route::prefix('premium')->group(function () {
         // Transactions
         Route::get('/transactions', [PremiumTransactionController::class, 'index']); // My transactions
@@ -225,7 +237,7 @@ Route::middleware(['auth:api', 'verified'])->group(function () {
         Route::get('/check-access/{productId}', [PremiumTransactionController::class, 'checkAccess']); // Check download access
     });
 
-    // ✅ NEW: Premium Products Admin Routes (Admin Only)
+    // ✅ Premium Products Admin Routes (Admin Only)
     Route::prefix('admin/premium-products')->group(function () {
         // 🎯 ROUTE BARU - Get single product by ID for edit
         Route::get('/{id}', [PremiumProductController::class, 'show']); // Get product by ID
@@ -261,21 +273,21 @@ Route::middleware(['auth:api', 'verified'])->group(function () {
         Route::delete('/reviews/{id}', [PremiumProductReviewController::class, 'destroy']); // Delete review
     });
 
-Route::prefix('admin/live-learnings')->group(function () {
-    Route::get('/', [AdminLiveLearningController::class, 'index']); // List all live learnings
-    Route::post('/', [AdminLiveLearningController::class, 'store']); // Create live learning
-    Route::get('/{id}', [AdminLiveLearningController::class, 'show']); // Get live learning by ID
-    Route::put('/{id}', [AdminLiveLearningController::class, 'update']); // Update live learning
-    Route::delete('/{id}', [AdminLiveLearningController::class, 'destroy']); // Delete live learning (soft delete)
-    
-    // Registrations Management
-    Route::get('/{id}/registrations', [AdminLiveLearningController::class, 'registrations']); // Get registrations for specific live learning
-    
-    // ✅ TAMBAHAN BARU - Export Registrations
-    Route::get('/{id}/registrations/export', [AdminLiveLearningController::class, 'exportRegistrations']); // Export registrations to Excel
-});
+    Route::prefix('admin/live-learnings')->group(function () {
+        Route::get('/', [AdminLiveLearningController::class, 'index']); // List all live learnings
+        Route::post('/', [AdminLiveLearningController::class, 'store']); // Create live learning
+        Route::get('/{id}', [AdminLiveLearningController::class, 'show']); // Get live learning by ID
+        Route::put('/{id}', [AdminLiveLearningController::class, 'update']); // Update live learning
+        Route::delete('/{id}', [AdminLiveLearningController::class, 'destroy']); // Delete live learning (soft delete)
+        
+        // Registrations Management
+        Route::get('/{id}/registrations', [AdminLiveLearningController::class, 'registrations']); // Get registrations for specific live learning
+        
+        // ✅ Export Registrations
+        Route::get('/{id}/registrations/export', [AdminLiveLearningController::class, 'exportRegistrations']); // Export registrations to Excel
+    });
 
-    // ✅ NEW: Live Learning Registrations Admin Routes
+    // ✅ Live Learning Registrations Admin Routes
     Route::prefix('admin/live-learning-registrations')->group(function () {
         Route::get('/', [AdminLiveLearningController::class, 'allRegistrations']); // Get all registrations
         Route::delete('/{id}', [AdminLiveLearningController::class, 'destroyRegistration']); // Delete registration
@@ -293,7 +305,7 @@ Route::prefix('admin/live-learnings')->group(function () {
         Route::patch('/{id}/toggle-active', [LearnCornerController::class, 'toggleActive']); // Toggle active status
     });
 
-    // ✅ NEW: Insight Lab Admin Routes (Admin Only)
+    // ✅ Insight Lab Admin Routes (Admin Only)
     Route::middleware('insight.admin')->prefix('admin')->group(function () {
         
         // Categories Management
@@ -313,4 +325,114 @@ Route::prefix('admin/live-learnings')->group(function () {
         // Comments Management
         Route::delete('/comments/{id}', [AdminInsightCommentController::class, 'destroy']); // Delete any comment
     });
+
+    // ========================================================================
+    // ✅ NEW: RAB AUTOMATION ROUTES
+    // ========================================================================
+    
+    // Admin RAB Routes
+    Route::prefix('rab/admin')->group(function () {
+        
+        // AHSP Sources Management
+        Route::prefix('ahsp-sources')->group(function () {
+            Route::get('/', [AdminAhspSourceController::class, 'index']);
+            Route::post('/', [AdminAhspSourceController::class, 'store']);
+            Route::get('/{id}', [AdminAhspSourceController::class, 'show']);
+            Route::put('/{id}', [AdminAhspSourceController::class, 'update']);
+            Route::delete('/{id}', [AdminAhspSourceController::class, 'destroy']);
+            Route::patch('/{id}/toggle-active', [AdminAhspSourceController::class, 'toggleActive']);
+            Route::get('/{id}/stats', [AdminAhspSourceController::class, 'stats']);
+        });
+        
+        // Master AHSP Management
+        Route::prefix('master-ahsp')->group(function () {
+            Route::get('/', [AdminMasterAhspController::class, 'index']);
+            Route::post('/', [AdminMasterAhspController::class, 'store']);
+            Route::get('/{id}', [AdminMasterAhspController::class, 'show']);
+            Route::put('/{id}', [AdminMasterAhspController::class, 'update']);
+            Route::delete('/{id}', [AdminMasterAhspController::class, 'destroy']);
+            Route::post('/{id}/calculate-price', [AdminMasterAhspController::class, 'calculatePrice']);
+            Route::post('/{id}/breakdown', [AdminMasterAhspController::class, 'breakdown']);
+            Route::post('/{id}/duplicate', [AdminMasterAhspController::class, 'duplicate']);
+        });
+        
+        // Project Templates Management
+        Route::prefix('templates')->group(function () {
+            Route::get('/', [AdminProjectTemplateController::class, 'index']);
+            Route::post('/', [AdminProjectTemplateController::class, 'store']);
+            Route::get('/{id}', [AdminProjectTemplateController::class, 'show']);
+            Route::put('/{id}', [AdminProjectTemplateController::class, 'update']);
+            Route::delete('/{id}', [AdminProjectTemplateController::class, 'destroy']);
+        });
+        
+        // Items Management
+        Route::prefix('items')->group(function () {
+            Route::get('/', [AdminItemController::class, 'index']);
+            Route::post('/', [AdminItemController::class, 'store']);
+            Route::get('/{id}', [AdminItemController::class, 'show']);
+            Route::put('/{id}', [AdminItemController::class, 'update']);
+            Route::delete('/{id}', [AdminItemController::class, 'destroy']);
+        });
+        
+        // Regions Management
+        Route::prefix('regions')->group(function () {
+            Route::get('/', [AdminRegionController::class, 'index']);
+            Route::post('/', [AdminRegionController::class, 'store']);
+            Route::get('/{id}', [AdminRegionController::class, 'show']);
+            Route::put('/{id}', [AdminRegionController::class, 'update']);
+            Route::delete('/{id}', [AdminRegionController::class, 'destroy']);
+        });
+    });
+    
+    // User RAB Routes (Projects)
+    Route::prefix('rab/projects')->group(function () {
+        // Projects CRUD
+        Route::get('/', [ProjectController::class, 'index']);
+        Route::post('/', [ProjectController::class, 'store']);
+        Route::get('/{id}', [ProjectController::class, 'show']);
+        Route::put('/{id}', [ProjectController::class, 'update']);
+        Route::delete('/{id}', [ProjectController::class, 'destroy']);
+        Route::get('/{id}/summary', [ProjectController::class, 'summary']);
+        Route::post('/{id}/recalculate', [ProjectController::class, 'recalculate']);
+        
+        // Project Categories
+        Route::get('/{projectId}/categories', [ProjectCategoryController::class, 'index']);
+        Route::post('/{projectId}/categories', [ProjectCategoryController::class, 'store']);
+        Route::get('/{projectId}/categories/{id}', [ProjectCategoryController::class, 'show']);
+        Route::put('/{projectId}/categories/{id}', [ProjectCategoryController::class, 'update']);
+        Route::delete('/{projectId}/categories/{id}', [ProjectCategoryController::class, 'destroy']);
+        Route::get('/{projectId}/categories/{id}/total', [ProjectCategoryController::class, 'total']);
+        
+        // Project AHSP
+        Route::get('/{projectId}/ahsp', [ProjectAhspController::class, 'index']);
+        Route::post('/{projectId}/ahsp/from-master', [ProjectAhspController::class, 'addFromMaster']);
+        Route::post('/{projectId}/ahsp/custom', [ProjectAhspController::class, 'createCustom']);
+        Route::get('/{projectId}/ahsp/{id}', [ProjectAhspController::class, 'show']);
+        Route::put('/{projectId}/ahsp/{id}/composition', [ProjectAhspController::class, 'updateComposition']);
+        Route::delete('/{projectId}/ahsp/{id}', [ProjectAhspController::class, 'destroy']);
+        Route::get('/{projectId}/ahsp/{id}/calculate-price', [ProjectAhspController::class, 'calculatePrice']);
+        Route::get('/{projectId}/ahsp/{id}/breakdown', [ProjectAhspController::class, 'breakdown']);
+        Route::post('/{projectId}/ahsp/{id}/sync-from-master', [ProjectAhspController::class, 'syncFromMaster']);
+        
+        // Project BOQ
+        Route::get('/{projectId}/boq', [ProjectBoqController::class, 'index']);
+        Route::post('/{projectId}/boq', [ProjectBoqController::class, 'store']);
+        Route::put('/{projectId}/boq/{id}', [ProjectBoqController::class, 'update']);
+        Route::delete('/{projectId}/boq/{id}', [ProjectBoqController::class, 'destroy']);
+        Route::post('/{projectId}/boq/{id}/recalculate', [ProjectBoqController::class, 'recalculate']);
+    });
+    
+    // RAB Calculations
+    Route::prefix('rab/calculations')->group(function () {
+        Route::get('/project/{projectId}/totals', [CalculationController::class, 'projectTotals']);
+        Route::get('/project/{projectId}/summary', [CalculationController::class, 'projectSummary']);
+        Route::get('/ahsp/{projectAhspId}/breakdown', [CalculationController::class, 'ahspBreakdown']);
+        Route::get('/category/{categoryId}/total', [CalculationController::class, 'categoryTotal']);
+        Route::post('/compare-projects', [CalculationController::class, 'compareProjects']);
+        Route::post('/project/{projectId}/recalculate', [CalculationController::class, 'recalculateProject']);
+    });
+    
+    // ========================================================================
+    // END: RAB AUTOMATION ROUTES
+    // ========================================================================
 });
